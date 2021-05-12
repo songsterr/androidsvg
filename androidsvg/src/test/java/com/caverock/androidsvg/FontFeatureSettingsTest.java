@@ -30,6 +30,7 @@ import org.robolectric.shadow.api.Shadow;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest=Config.NONE, sdk=Build.VERSION_CODES.O, shadows={MockCanvas.class, MockPath.class, MockPaint.class})
@@ -51,8 +52,11 @@ public class FontFeatureSettingsTest
 
       //List<String>  ops = ((MockCanvas) Shadow.extract(canvas)).getOperations();
       //System.out.println(String.join(",", ops));
-      assertEquals("'onum' 0,'subs' 0,'unic' 0,'calt' 1,'dlig' 0,'c2pc' 0,'mkmk' 1,'swsh' 42,'zero' 0,'hlig' 0,'c2sc' 0,'sups' 0,'pcap' 0,'jp78' 0,'pwid' 0,'trad' 0,'ordn' 0,'titl' 0,'fwid' 0,'frac' 0,'locl' 1,'pnum' 1,'smpl' 0,'kern' 1,'tnum' 0,'liga' 0,'lnum' 0,'clig' 1,'jp90' 0,'rlig' 1,'ccmp' 1,'ruby' 0,'jp83' 0,'smcp' 0,'afrc' 0,'jp04' 0,'mark' 1",
-                    mock.paintProp(3, "ff"));
+      String ff = mock.paintProp(3, "ff") + ',';
+      assertTrue(ff.contains("'pnum' 1,"));
+      assertTrue(ff.contains("'clig' 1,"));
+      assertTrue(ff.contains("'swsh' 42,"));
+      assertTrue(ff.contains("'liga' 0,"));
    }
 
    //-----------------------------------------------------------------------------------------------
@@ -73,8 +77,9 @@ public class FontFeatureSettingsTest
 
       //List<String>  ops = ((MockCanvas) Shadow.extract(canvas)).getOperations();
       //System.out.println(String.join(",", ops));
-      assertEquals("'wdth' 100,'slnt' -14,'wght' 100",
-                    mock.paintProp(3, "fv"));
+      String paintProp = mock.paintProp(3, "fv");
+      assertTrue(paintProp.contains("'wdth' 100"));
+      assertTrue(paintProp.contains("'slnt' -14"));
    }
 
    //-----------------------------------------------------------------------------------------------
