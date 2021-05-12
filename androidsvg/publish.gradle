@@ -25,16 +25,13 @@ publishing {
     }
 
     publications {
+        gpr(MavenPublication) {
+            groupId 'com.songsterr'
+            artifactId 'androidsvg'
+            version version
+            artifact(sourceJar)
 
-        publications {
-            gpr(MavenPublication) {
-                groupId 'com.songsterr'
-                artifactId 'androidsvg'
-                version version
-                artifact(sourceJar)
-
-                from components.release
-            }
+            from components.release
         }
     }
 }
