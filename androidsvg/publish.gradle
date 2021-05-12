@@ -2,12 +2,10 @@
 
 // This build file requires a recent Gradle (4.9+ ?)
 
-//apply plugin: 'java-library'
 apply plugin: 'maven-publish'
-apply plugin: 'signing'
-
 
 def tagName = '1.5.0'
+def artifactIdJAR = 'androidsvg'
 
 afterEvaluate {
     publishing {
@@ -60,10 +58,22 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.getDestinationDir()
 }
 
-//
-//signing {
-//    sign publishing.publications.mavenAAR
-//    sign publishing.publications.mavenJAR
-//}
+task libraryJar(type: Jar, dependsOn: 'compileReleaseJavaWithJavac') {
+    from {
+        compileReleaseJavaWithJavac.destinationDir
+    }
+
+    // Add all dependencies except for android.jar to the fat jar
+    from {
+        configurations.compile.findAll {
+            it.getName() != 'android.jar' &&
+                    !it.getName().startsWith('junit')
+        }.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+
+    archiveName "${artifactIdJAR}-${tagName}.jar"
+}
 
 
