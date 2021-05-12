@@ -14,7 +14,7 @@ publishing {
         maven {
             name 'maven.songsterr.com'
             def repo = 's3://maven.songsterr.com.s3.amazonaws.com/'
-            if (tagName.endsWith('-SNAPSHOT')) {
+            if (version.endsWith('-SNAPSHOT')) {
                 repo += "snapshots/"
             }
             url = repo
