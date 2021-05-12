@@ -7,35 +7,36 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 
-def  version = '1.5.0'
+def tagName = '1.5.0'
 
-publishing {
-    repositories {
-        maven {
-            name 'maven.songsterr.com'
-            def repo = 's3://maven.songsterr.com.s3.amazonaws.com/'
-            if (version.endsWith('-SNAPSHOT')) {
-                repo += "snapshots/"
-            }
-            url = repo
-            authentication {
-                awsIm(AwsImAuthentication) // load from EC2 role or env var
+afterEvaluate {
+    publishing {
+        repositories {
+            maven {
+                name 'maven.songsterr.com'
+                def repo = 's3://maven.songsterr.com.s3.amazonaws.com/'
+                if (tagName.endsWith('-SNAPSHOT')) {
+                    repo += "snapshots/"
+                }
+                url = repo
+                authentication {
+                    awsIm(AwsImAuthentication) // load from EC2 role or env var
+                }
             }
         }
-    }
 
-    publications {
-        gpr(MavenPublication) {
-            groupId 'com.songsterr'
-            artifactId 'androidsvg'
-            version version
-            artifact(sourceJar)
+        publications {
+            gpr(MavenPublication) {
+                groupId 'com.songsterr'
+                artifactId 'androidsvg'
+                version tagName
+                artifact(sourcesJar)
 
-            from components.release
+                from components.release
+            }
         }
     }
 }
-
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
@@ -59,25 +60,10 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.getDestinationDir()
 }
 
-task libraryJar(type: Jar, dependsOn: 'compileReleaseJavaWithJavac') {
-    from {
-        compileReleaseJavaWithJavac.destinationDir
-    }
+//
+//signing {
+//    sign publishing.publications.mavenAAR
+//    sign publishing.publications.mavenJAR
+//}
 
-    // Add all dependencies except for android.jar to the fat jar
-    from {
-        configurations.compile.findAll {
-            it.getName() != 'android.jar' &&
-            !it.getName().startsWith('junit')
-        }.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
 
-    archiveName "${artifactIdJAR}-${version}.jar"
-}
-
-signing {
-    sign publishing.publications.mavenAAR
-    sign publishing.publications.mavenJAR
-}
