@@ -7,123 +7,33 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 
-def  version = '1.5'
-//version = '1.3-SNAPSHOT'
-
-def  libraryName = 'AndroidSVG'
-def  libraryDescription = 'SVG rendering library for Android.'
-
-def  artifactIdAAR = 'androidsvg-aar'
-def  artifactIdJAR = 'androidsvg'
-def  group = 'com.caverock'
-
-def  developerId = 'BigBadaboom'
-def  developerName = 'Paul LeBeau'
-def  developerEmail = 'androidsvgfeedback@gmail.com'
-
-def  siteUrl = 'https://github.com/BigBadaboom/androidsvg'
-def  gitUrl = 'https://github.com/BigBadaboom/androidsvg.git'
-
-def  licenseName = 'The Apache Software License, Version 2.0'
-def  licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-
-def  releaseRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-def  snapshotRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
-
+def  version = '1.5.0'
 
 publishing {
     repositories {
         maven {
-            url = version.endsWith('SNAPSHOT') ? snapshotRepoUrl : releaseRepoUrl
-            credentials {
-                // These are set in ~/.gradle/gradle.properties
-                username project.sonatypeUsername
-                password project.sonatypePassword
+            name 'maven.songsterr.com'
+            def repo = 's3://maven.songsterr.com.s3.amazonaws.com/'
+            if (tagName.endsWith('-SNAPSHOT')) {
+                repo += "snapshots/"
+            }
+            url = repo
+            authentication {
+                awsIm(AwsImAuthentication) // load from EC2 role or env var
             }
         }
     }
 
     publications {
 
-        mavenAAR(MavenPublication) {
-            artifactId = artifactIdAAR
-            groupId = group
+        publications {
+            gpr(MavenPublication) {
+                groupId 'com.songsterr'
+                artifactId 'androidsvg'
+                version version
+                artifact(sourceJar)
 
-            artifact("${buildDir}/outputs/aar/androidsvg-release.aar") {
-                // wrap in a closure because this task isn't defined 'till
-                // the android plugin finishes
-                builtBy { tasks["assembleRelease"] }
-            }
-            afterEvaluate {
-               artifact sourcesJar
-               artifact javadocJar
-            }
-
-            pom {
-                packaging = 'aar'
-
-                name = libraryName
-                description = libraryDescription
-                url = siteUrl
-
-                licenses {
-                    license {
-                        name = licenseName
-                        url = licenseUrl
-                        distribution = 'repo'
-                    }
-                }
-                developers {
-                    developer {
-                        id = developerId
-                        name = developerName
-                        email = developerEmail
-                    }
-                }
-                scm {
-                    connection = gitUrl
-                    developerConnection = gitUrl
-                    url = siteUrl
-                }
-            }
-        }
-
-        mavenJAR(MavenPublication) {
-            artifactId = artifactIdJAR
-            groupId = group
-
-            afterEvaluate {
-               artifact libraryJar
-               artifact sourcesJar
-               artifact javadocJar
-            }
-
-            pom {
-                packaging = 'jar'
-
-                name = libraryName
-                description = libraryDescription
-                url = siteUrl
-
-                licenses {
-                    license {
-                        name = licenseName
-                        url = licenseUrl
-                        distribution = 'repo'
-                    }
-                }
-                developers {
-                    developer {
-                        id = developerId
-                        name = developerName
-                        email = developerEmail
-                    }
-                }
-                scm {
-                    connection = gitUrl
-                    developerConnection = gitUrl
-                    url = siteUrl
-                }
+                from components.release
             }
         }
     }
