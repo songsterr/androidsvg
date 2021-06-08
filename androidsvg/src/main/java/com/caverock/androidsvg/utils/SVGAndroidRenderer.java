@@ -231,7 +231,7 @@ public class SVGAndroidRenderer
 
       state.viewPort = null;  // Get filled in later
 
-      state.spacePreserve = false;
+      state.spacePreserve = true;
 
       // Push a copy of the state with 'default' style, so that inherit works for top level objects
       stateStack.push(new RendererState(state));   // Manual push here - don't use statePush();
