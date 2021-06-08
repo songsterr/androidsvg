@@ -21,6 +21,7 @@ import android.graphics.Canvas;
 import android.graphics.RectF;
 import android.os.Build;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -62,6 +63,7 @@ public class FontFeatureSettingsTest
    //-----------------------------------------------------------------------------------------------
 
    @Test
+   @Ignore("Font variation disabled because it's slow")
    public void fontVariation() throws SVGParseException
    {
       String  test = "<svg>\n" +
@@ -85,6 +87,7 @@ public class FontFeatureSettingsTest
    //-----------------------------------------------------------------------------------------------
 
    @Test
+   @Ignore("Font variation disabled because it's slow")
    public void fontStretch() throws SVGParseException
    {
       String  test = "<svg>\n" +
