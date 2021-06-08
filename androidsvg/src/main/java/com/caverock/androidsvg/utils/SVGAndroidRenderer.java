@@ -119,7 +119,7 @@ public class SVGAndroidRenderer
    private static final boolean  SUPPORTS_PATH_OP = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
    private static final boolean  SUPPORTS_PAINT_FONT_FEATURE_SETTINGS = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
    private static final boolean  SUPPORTS_PAINT_LETTER_SPACING = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
-   private static final boolean  SUPPORTS_PAINT_FONT_VARIATION_SETTINGS = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+   private static final boolean  SUPPORTS_PAINT_FONT_VARIATION_SETTINGS = false && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
    private static final boolean  SUPPORTS_BLEND_MODE = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;          // Android 10
    private static final boolean  SUPPORTS_PAINT_WORD_SPACING = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;
 
