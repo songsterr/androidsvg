@@ -38,7 +38,7 @@ import java.util.Map;
  * A very simple CSS parser that is not entirely compliant with the CSS spec but
  * hopefully parses almost all the CSS we are likely to strike in an SVG file.
  */
-public class CSSParser
+class CSSParser
 {
    private static final String  TAG = "CSSParser";
 
