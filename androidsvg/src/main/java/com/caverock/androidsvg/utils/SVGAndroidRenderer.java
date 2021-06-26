@@ -2033,18 +2033,18 @@ public class SVGAndroidRenderer
    // Process the text string according to the xml:space rules
    private String  textXMLSpaceTransform(String text, boolean isFirstChild, boolean isLastChild)
    {
-      if (state.spacePreserve)  // xml:space = "preserve"
-         return PATTERN_TABS_OR_LINE_BREAKS.matcher(text).replaceAll(" ");
-
-      // xml:space = "default"
-      text = PATTERN_TABS.matcher(text).replaceAll("");
-      text = PATTERN_LINE_BREAKS.matcher(text).replaceAll(" ");
-      //text = text.trim();
-      if (isFirstChild)
-         text = PATTERN_START_SPACES.matcher(text).replaceAll("");
-      if (isLastChild)
-         text = PATTERN_END_SPACES.matcher(text).replaceAll("");
-      return PATTERN_DOUBLE_SPACES.matcher(text).replaceAll(" ");
+//      if (state.spacePreserve)  // xml:space = "preserve"
+//         return PATTERN_TABS_OR_LINE_BREAKS.matcher(text).replaceAll(" ");
+//
+//      // xml:space = "default"
+//      text = PATTERN_TABS.matcher(text).replaceAll("");
+//      text = PATTERN_LINE_BREAKS.matcher(text).replaceAll(" ");
+//      //text = text.trim();
+//      if (isFirstChild)
+//         text = PATTERN_START_SPACES.matcher(text).replaceAll("");
+//      if (isLastChild)
+//         text = PATTERN_END_SPACES.matcher(text).replaceAll("");
+      return text; // PATTERN_DOUBLE_SPACES.matcher(text).replaceAll(" ");
    }
 
 

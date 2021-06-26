@@ -26,7 +26,7 @@ public class CSSTextScanner extends TextScanner
 
    public CSSTextScanner(String input)
    {
-      super(PATTERN_BLOCK_COMMENTS.matcher(input).replaceAll(""));  // strip all block comments
+      super(input);// PATTERN_BLOCK_COMMENTS.matcher(input).replaceAll(""));  // strip all block comments
    }
 
    /*

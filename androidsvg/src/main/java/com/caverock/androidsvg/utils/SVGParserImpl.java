@@ -2662,7 +2662,7 @@ class SVGParserImpl implements SVGParser
     */
    private static void  parseStyle(SvgElementBase obj, String style)
    {
-      CSSTextScanner  scan = new CSSTextScanner(PATTERN_BLOCK_COMMENTS.matcher(style).replaceAll(""));  // regex strips block comments
+      CSSTextScanner  scan = new CSSTextScanner(style); // PATTERN_BLOCK_COMMENTS.matcher(style).replaceAll(""));  // regex strips block comments
 
       while (!scan.empty())
       {
