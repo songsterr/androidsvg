@@ -1,6 +1,6 @@
 pipeline:
   test:
-    image: hub.terra.songsterr.com/builderr-android
+    image: hub-eu.terra.songsterr.com/builderr-android
     commands:
       - ./gradlew --console=plain testDebug --stacktrace
     artifacts:
@@ -8,6 +8,6 @@ pipeline:
     message: |
       <${BUILDERR_ARTIFACTS_LINK}/tests/testDebugUnitTest|Unit test report>
   publish:
-    image: hub.terra.songsterr.com/builderr-android
+    image: hub-eu.terra.songsterr.com/builderr-android
     commands:
       - ./gradlew publish --stacktrace
