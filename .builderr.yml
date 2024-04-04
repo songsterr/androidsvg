@@ -1,3 +1,4 @@
+channel: '#sra-builds'
 workflows:
   build:
     when:
