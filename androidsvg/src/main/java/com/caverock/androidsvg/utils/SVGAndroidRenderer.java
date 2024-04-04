@@ -22,6 +22,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BlendMode;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.DashPathEffect;
@@ -122,6 +123,8 @@ public class SVGAndroidRenderer
    private static final boolean  SUPPORTS_PAINT_FONT_VARIATION_SETTINGS = false && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
    private static final boolean  SUPPORTS_BLEND_MODE = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;          // Android 10
    private static final boolean  SUPPORTS_PAINT_WORD_SPACING = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;
+   private static final boolean  SUPPORTS_SAVE_LAYER_FLAGLESS = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+   private static final boolean  SUPPORTS_RADIAL_GRADIENT_WITH_FOCUS = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
 
    private static final java.util.regex.Pattern PATTERN_TABS_OR_LINE_BREAKS = java.util.regex.Pattern.compile("[\\n\\t]");
    private static final java.util.regex.Pattern PATTERN_TABS = java.util.regex.Pattern.compile("\\t");
@@ -286,9 +289,10 @@ public class SVGAndroidRenderer
 
    /*
     * Get the current view port in user units.
-    *
+    * If a viewBox is in effect, then this will return the viewBox
+    * since a viewBox transform will have already been applied.
     */
-   Box  getCurrentViewPortInUserUnits()
+   Box getEffectiveViewPortInUserUnits()
    {
       if (state.viewBox != null)
          return state.viewBox;
@@ -461,7 +465,7 @@ public class SVGAndroidRenderer
       if (isRootContext) {
          // Root SVG context should be transparent. So we need to saveLayer
          // to avoid background messing with blend modes etc.
-         canvas.saveLayer(null, null, Canvas.ALL_SAVE_FLAG);
+         canvasSaveLayer(canvas, null, null);
       } else {
          canvas.save();
       }
@@ -477,6 +481,23 @@ public class SVGAndroidRenderer
       canvas.restore();
       // Restore style state
       state = stateStack.pop();
+   }
+
+
+   /*
+    * Canvas#saveLayer(bounds, paint, flags) is deprecated in SDK 28 and might be
+    * removed at short notice. As save(flags) was in SDK 28.  So we have created
+    * this method as future-proofing.
+    */
+   private void canvasSaveLayer(Canvas canvas, RectF bounds, Paint paint)
+   {
+      if (SUPPORTS_SAVE_LAYER_FLAGLESS) {
+         // New-style saveLayer() - SDK 21+
+         canvas.saveLayer(bounds, paint);
+      } else {
+         // Old-style saveLayer()
+         CanvasLegacy.saveLayer(canvas, bounds, paint, CanvasLegacy.ALL_SAVE_FLAG);
+      }
    }
 
 
@@ -686,6 +707,7 @@ public class SVGAndroidRenderer
          state.viewBox = obj.viewBox;  // Note: definitely obj.viewBox here. Not viewBox parameter.
       } else {
          canvas.translate(state.viewPort.minX, state.viewPort.minY);
+         state.viewBox = null;
       }
 
       boolean  compositing = pushLayer();
@@ -708,7 +730,7 @@ public class SVGAndroidRenderer
       float  _x = (x != null) ? x.floatValueX(this) : 0f;
       float  _y = (y != null) ? y.floatValueY(this) : 0f;
 
-      Box viewPortUser = getCurrentViewPortInUserUnits();
+      Box viewPortUser = getEffectiveViewPortInUserUnits();
       float  _w = (width != null) ? width.floatValueX(this) : viewPortUser.width;  // default 100%
       float  _h = (height != null) ? height.floatValueY(this) : viewPortUser.height;
 
@@ -814,7 +836,7 @@ public class SVGAndroidRenderer
       if (SUPPORTS_BLEND_MODE && state.style.mixBlendMode != CSSBlendMode.normal) {
          setBlendMode(savePaint);
       }
-      canvas.saveLayer(null, savePaint, Canvas.ALL_SAVE_FLAG);
+      canvasSaveLayer(canvas, null, savePaint);
 
       // Save style state
       stateStack.push(state);
@@ -860,7 +882,7 @@ public class SVGAndroidRenderer
          // Final mask gets composited using Porter Duff mode DST_IN
          Paint  maskPaintCombined = new Paint();
          maskPaintCombined.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-         canvas.saveLayer(null, maskPaintCombined, Canvas.ALL_SAVE_FLAG);
+         canvasSaveLayer(canvas, null, maskPaintCombined);
 
            // Step 1
            Paint  maskPaint1 = new Paint();
@@ -870,7 +892,7 @@ public class SVGAndroidRenderer
                                                                         0,       0,       0,       0, 0,
                                                                         SVGAndroidRenderer.LUMINANCE_TO_ALPHA_RED, SVGAndroidRenderer.LUMINANCE_TO_ALPHA_GREEN, SVGAndroidRenderer.LUMINANCE_TO_ALPHA_BLUE, 0, 0});
            maskPaint1.setColorFilter(new ColorMatrixColorFilter(luminanceToAlpha));
-           canvas.saveLayer(null, maskPaint1, Canvas.ALL_SAVE_FLAG);   // TODO use real mask bounds
+           canvasSaveLayer(canvas, null, maskPaint1);   // TODO use real mask bounds
 
              // Render the mask content into the step 1 layer
              SvgObject  ref = document.resolveIRI(state.style.mask);
@@ -882,7 +904,7 @@ public class SVGAndroidRenderer
            // Step 2
            Paint  maskPaint2 = new Paint();
            maskPaint2.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-           canvas.saveLayer(null, maskPaint2, Canvas.ALL_SAVE_FLAG);
+           canvasSaveLayer(canvas, null, maskPaint2);
 
              // Render the mask content (again) into the step 2 part
              renderMask((Mask) ref, obj, originalObjBBox);
@@ -2074,6 +2096,7 @@ public class SVGAndroidRenderer
          state.viewBox = obj.viewBox;
       } else {
          canvas.translate(state.viewPort.minX, state.viewPort.minY);
+         state.viewBox = null;
       }
       
       boolean  compositing = pushLayer();
@@ -3609,17 +3632,16 @@ public class SVGAndroidRenderer
       float  _x1,_y1,_x2,_y2;
       if (userUnits)
       {
-          Box  viewPortUser = getCurrentViewPortInUserUnits();
          _x1 = (gradient.x1 != null) ? gradient.x1.floatValueX(this): 0f;
          _y1 = (gradient.y1 != null) ? gradient.y1.floatValueY(this): 0f;
-         _x2 = (gradient.x2 != null) ? gradient.x2.floatValueX(this): viewPortUser.width; // 100%
+         _x2 = (gradient.x2 != null) ? gradient.x2.floatValueX(this): Length.PERCENT_100.floatValueX(this);  // default is 1.0/100%
          _y2 = (gradient.y2 != null) ? gradient.y2.floatValueY(this): 0f;
       }
       else
       {
          _x1 = (gradient.x1 != null) ? gradient.x1.floatValue(this, 1f): 0f;
          _y1 = (gradient.y1 != null) ? gradient.y1.floatValue(this, 1f): 0f;
-         _x2 = (gradient.x2 != null) ? gradient.x2.floatValue(this, 1f): 1f;
+         _x2 = (gradient.x2 != null) ? gradient.x2.floatValue(this, 1f): 1f;  // default is 1.0/100%
          _y2 = (gradient.y2 != null) ? gradient.y2.floatValue(this, 1f): 0f;
       }
 
@@ -3717,19 +3739,32 @@ public class SVGAndroidRenderer
       boolean  userUnits = (gradient.gradientUnitsAreUser != null && gradient.gradientUnitsAreUser);
       Paint    paint = isFill ? state.fillPaint : state.strokePaint;
 
-      float  _cx,_cy,_r;
+      float  _cx, _cy, _r,
+             _fx = 0, _fy = 0, _fr = 0;
       if (userUnits)
       {
          Length  fiftyPercent = new Length(50f, Unit.percent);
          _cx = (gradient.cx != null) ? gradient.cx.floatValueX(this): fiftyPercent.floatValueX(this);
          _cy = (gradient.cy != null) ? gradient.cy.floatValueY(this): fiftyPercent.floatValueY(this);
          _r = (gradient.r != null) ? gradient.r.floatValue(this): fiftyPercent.floatValue(this);
+
+         if (SUPPORTS_RADIAL_GRADIENT_WITH_FOCUS) {
+            _fx = (gradient.fx != null) ? gradient.fx.floatValueX(this): _cx;
+            _fy = (gradient.fy != null) ? gradient.fy.floatValueY(this): _cy;
+            _fr = (gradient.fr != null) ? gradient.fr.floatValue(this): 0;
+         }
       }
       else
       {
          _cx = (gradient.cx != null) ? gradient.cx.floatValue(this, 1f): 0.5f;
          _cy = (gradient.cy != null) ? gradient.cy.floatValue(this, 1f): 0.5f;
          _r = (gradient.r != null) ? gradient.r.floatValue(this, 1f): 0.5f;
+
+         if (SUPPORTS_RADIAL_GRADIENT_WITH_FOCUS) {
+            _fx = (gradient.fx != null) ? gradient.fx.floatValue(this, 1f): 0.5f;
+            _fy = (gradient.fy != null) ? gradient.fy.floatValue(this, 1f): 0.5f;
+            _fr = (gradient.fr != null) ? gradient.fr.floatValue(this, 1f): 0;
+         }
       }
       // fx and fy are ignored because Android RadialGradient doesn't support a
       // 'focus' point that is different from cx,cy.
@@ -3764,7 +3799,16 @@ public class SVGAndroidRenderer
          return;
       }
 
-      int[]  colours = new int[numStops];
+      int[]  colours = null;
+      //@ColorLong
+      long[] colourLongs = null;
+
+      if (SUPPORTS_RADIAL_GRADIENT_WITH_FOCUS) {
+         colourLongs = new long[numStops];
+      } else {
+         colours = new int[numStops];
+      }
+
       float[]  positions = new float[numStops];
       int  i = 0;
       float  lastOffset = -1;
@@ -3787,7 +3831,11 @@ public class SVGAndroidRenderer
          Colour col = (Colour) state.style.stopColor;
          if (col == null)
             col = Colour.BLACK;
-         colours[i] = colourWithOpacity(col.colour, state.style.stopOpacity);
+         if (SUPPORTS_RADIAL_GRADIENT_WITH_FOCUS) {
+            colourLongs[i] = Color.pack( colourWithOpacity(col.colour, state.style.stopOpacity) );
+         } else {
+            colours[i] = colourWithOpacity(col.colour, state.style.stopOpacity);
+         }
          i++;
 
          statePop();
@@ -3813,7 +3861,8 @@ public class SVGAndroidRenderer
       statePop();
 
       // Create shader instance
-      RadialGradient  gr = new RadialGradient(_cx, _cy, _r, colours, positions, tileMode); 
+      RadialGradient  gr = SUPPORTS_RADIAL_GRADIENT_WITH_FOCUS ? new RadialGradient(_fx, _fy, _fr, _cx, _cy, _r, colourLongs, positions, tileMode)
+                                                               : new RadialGradient(_cx, _cy, _r, colours, positions, tileMode);
       gr.setLocalMatrix(m);
       paint.setShader(gr);
       paint.setAlpha(clamp255(state.style.fillOpacity));
@@ -3893,6 +3942,8 @@ public class SVGAndroidRenderer
          gradient.fx = grRef.fx;
       if (gradient.fy == null)
          gradient.fy = grRef.fy;
+      if (gradient.fr == null)
+         gradient.fr = grRef.fr;
    }
 
 
@@ -3987,6 +4038,11 @@ public class SVGAndroidRenderer
          error("ClipPath reference '%s' not found", state.style.clipPath);
          return null;
       }
+      // https://drafts.fxtf.org/css-masking-1/#the-clip-path
+      // If the URI reference is not valid (e.g it points to an object that doesn’t
+      // exist or the object is not a clipPath element), no clipping is applied.
+      if (ref.getNodeName() != ClipPath.NODE_NAME)
+         return null;
 
       ClipPath  clipPath = (ClipPath) ref;
 
@@ -4165,6 +4221,11 @@ public class SVGAndroidRenderer
          error("ClipPath reference '%s' not found", state.style.clipPath);
          return;
       }
+      // https://drafts.fxtf.org/css-masking-1/#the-clip-path
+      // If the URI reference is not valid (e.g it points to an object that doesn’t
+      // exist or the object is not a clipPath element), no clipping is applied.
+      if (ref.getNodeName() != ClipPath.NODE_NAME)
+         return;
 
       ClipPath clipPath = (ClipPath) ref;
 
