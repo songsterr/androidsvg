@@ -38,7 +38,7 @@ afterEvaluate {
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
+    archiveClassifier.set('sources')
 }
 
 task javadoc(type: Javadoc) {
@@ -54,7 +54,7 @@ task javadoc(type: Javadoc) {
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier 'javadoc'
+    archiveClassifier.set('javadoc')
     from javadoc.getDestinationDir()
 }
 
@@ -73,7 +73,7 @@ task libraryJar(type: Jar, dependsOn: 'compileReleaseJavaWithJavac') {
         }
     }
 
-    archiveName "${artifactIdJAR}-${tagName}.jar"
+    archiveFileName = "${artifactIdJAR}-${tagName}.jar"
 }
 
 
