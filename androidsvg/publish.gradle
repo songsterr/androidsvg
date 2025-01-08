@@ -30,7 +30,7 @@ afterEvaluate {
                 version tagName
                 artifact(sourcesJar)
 
-                from components.release
+//                from components.release
             }
         }
     }

@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@Config(manifest=Config.NONE, sdk = Build.VERSION_CODES.JELLY_BEAN, shadows={MockCanvas.class, MockPath.class, MockPaint.class})
+@Config(manifest=Config.NONE, sdk = Build.VERSION_CODES.N, shadows={MockCanvas.class, MockPath.class, MockPaint.class})
 @RunWith(RobolectricTestRunner.class)
 public class ParseTest
 {

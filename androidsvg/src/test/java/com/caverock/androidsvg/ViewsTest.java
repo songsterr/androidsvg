@@ -28,7 +28,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@Config(manifest=Config.NONE, sdk = Build.VERSION_CODES.JELLY_BEAN)
+@Config(manifest=Config.NONE, sdk = Build.VERSION_CODES.N)
 @RunWith(RobolectricTestRunner.class)
 public class ViewsTest
 {

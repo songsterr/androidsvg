@@ -15,7 +15,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(manifest=Config.NONE, sdk = Build.VERSION_CODES.KITKAT, shadows={MockCanvas.class, MockPath.class, MockPaint.class})
+@Config(manifest=Config.NONE, sdk = Build.VERSION_CODES.N, shadows={MockCanvas.class, MockPath.class, MockPaint.class})
 public class ArcTo
 {
    @Test
