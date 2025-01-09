@@ -19,6 +19,12 @@ android {
     buildFeatures {
         buildConfig = true
     }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
     dependencies {
         testImplementation 'junit:junit:4.13.2'
         testImplementation 'org.robolectric:robolectric:4.11.1'
