@@ -4,7 +4,7 @@
 
 apply plugin: 'maven-publish'
 
-def tagName = '1.5.6'
+def tagName = '1.5.7'
 def artifactIdJAR = 'androidsvg'
 
 afterEvaluate {
@@ -30,7 +30,7 @@ afterEvaluate {
                 version tagName
                 artifact(sourcesJar)
 
-//                from components.release
+                from components.release
             }
         }
     }
