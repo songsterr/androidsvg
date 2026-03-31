@@ -22,6 +22,10 @@ public class CSS extends CSSBase {
         super(css);
     }
 
+    protected int rulesCount() {
+        return super.cssRuleset.getRules().size();
+    }
+
     /**
      * @param css css string to parse
      * @return pre-parsed CSS

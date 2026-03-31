@@ -490,12 +490,12 @@ class CSSParser
       String  atKeyword = scan.nextIdentifier();
       scan.skipWhitespace();
       if (atKeyword == null)
-         throw new CSSParseException("Invalid '@' rule");
+         throw new CSSParseException("Invalid '@' rule" + errorContext(scan));
       if (!inMediaRule && atKeyword.equals("media"))
       {
          List<MediaType>  mediaList = parseMediaList(scan);
          if (!scan.consume('{'))
-            throw new CSSParseException("Invalid @media rule: missing rule set");
+            throw new CSSParseException("Invalid @media rule: missing rule set" + errorContext(scan));
             
          scan.skipWhitespace();
          if (mediaMatches(mediaList, deviceMediaType)) {
@@ -507,7 +507,7 @@ class CSSParser
          }
 
          if (!scan.empty() && !scan.consume('}'))
-            throw new CSSParseException("Invalid @media rule: expected '}' at end of rule set");
+            throw new CSSParseException("Invalid @media rule: expected '}' at end of rule set" + errorContext(scan));
 
       }
       else if (!inMediaRule && atKeyword.equals("import"))
@@ -516,13 +516,13 @@ class CSSParser
          if (file == null)
             file = scan.nextCSSString();
          if (file == null)
-            throw new CSSParseException("Invalid @import rule: expected string or url()");
+            throw new CSSParseException("Invalid @import rule: expected string or url()" + errorContext(scan));
 
          scan.skipWhitespace();
          List<MediaType>  mediaList = parseMediaList(scan);
 
          if (!scan.empty() && !scan.consume(';'))
-            throw new CSSParseException("Invalid @media rule: expected '}' at end of rule set");
+            throw new CSSParseException("Invalid @media rule: expected '}' at end of rule set" + errorContext(scan));
 
          if (externalFileResolver != null && mediaMatches(mediaList, deviceMediaType)) {
             String  css = externalFileResolver.resolveCSSStyleSheet(file);
@@ -600,7 +600,7 @@ class CSSParser
       if (selectors != null && !selectors.isEmpty())
       {
          if (!scan.consume('{'))
-            throw new CSSParseException("Malformed rule block: expected '{'");
+            throw new CSSParseException("Malformed rule block: expected '{'" + errorContext(scan));
          scan.skipWhitespace();
          Style  ruleStyle = parseDeclarations(scan);
          scan.skipWhitespace();
@@ -624,17 +624,17 @@ class CSSParser
          String propertyName = scan.nextIdentifier();
          scan.skipWhitespace();
          if (!scan.consume(':'))
-            throw new CSSParseException("Expected ':'");
+            throw new CSSParseException("Expected ':'" + errorContext(scan));
          scan.skipWhitespace();
          String propertyValue = scan.nextPropertyValue();
          if (propertyValue == null)
-            throw new CSSParseException("Expected property value");
+            throw new CSSParseException("Expected property value" + errorContext(scan));
          // Check for !important flag.
          scan.skipWhitespace();
          if (scan.consume('!')) {
             scan.skipWhitespace();
             if (!scan.consume("important")) {
-               throw new CSSParseException("Malformed rule set: found unexpected '!'");
+               throw new CSSParseException("Malformed rule set: found unexpected '!'" + errorContext(scan));
             }
             // We don't do anything with these. We just ignore them. TODO
             scan.skipWhitespace();
@@ -645,6 +645,18 @@ class CSSParser
          scan.skipWhitespace();
       } while (!scan.empty() && !scan.consume('}'));
       return ruleStyle;
+   }
+
+
+   private static String  errorContext(CSSTextScanner scan)
+   {
+      int pos = scan.position;
+      String input = scan.input;
+      int snippetStart = Math.max(0, pos - 20);
+      int snippetEnd = Math.min(input.length(), pos + 20);
+      String before = input.substring(snippetStart, pos);
+      String after = input.substring(pos, snippetEnd);
+      return " at position " + pos + ": …" + before + "▶" + after + "…";
    }
 
 
